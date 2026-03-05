@@ -2,6 +2,7 @@
 
 use alloc::collections::BTreeMap;
 use alloy_primitives::{Address, B256, U256};
+use base_access_lists::FlashblockAccessList;
 use op_alloy_consensus::OpReceipt;
 
 /// Provides metadata about the block that may be useful for indexing or analysis.
@@ -18,6 +19,10 @@ pub struct OpFlashblockPayloadMetadata {
     /// Contains logs, gas usage, and other EVM-level metadata.
     #[cfg_attr(feature = "serde", serde(deserialize_with = "deserialize_flashblock_receipts"))]
     pub receipts: BTreeMap<B256, OpReceipt>,
+    /// Optional access lists for the flashblock, tracking state access information.
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub access_lists: Option<FlashblockAccessList>,
 }
 
 #[cfg(feature = "serde")]
@@ -88,7 +93,12 @@ mod tests {
         });
         receipts.insert(B256::ZERO, receipt);
 
-        OpFlashblockPayloadMetadata { block_number: 100, new_account_balances: balances, receipts }
+        OpFlashblockPayloadMetadata {
+            block_number: 100,
+            new_account_balances: balances,
+            receipts,
+            access_lists: None,
+        }
     }
 
     #[test]
@@ -123,6 +133,7 @@ mod tests {
             block_number: 1,
             new_account_balances: balances,
             receipts: BTreeMap::new(),
+            access_lists: None,
         };
 
         let json = serde_json::to_value(&metadata).unwrap();
@@ -148,6 +159,7 @@ mod tests {
             block_number: 1,
             new_account_balances: BTreeMap::new(),
             receipts,
+            access_lists: None,
         };
 
         let json = serde_json::to_value(&metadata).unwrap();
@@ -177,6 +189,7 @@ mod tests {
             block_number: 1,
             new_account_balances: BTreeMap::new(),
             receipts,
+            access_lists: None,
         };
 
         let json = serde_json::to_value(&metadata).unwrap();
