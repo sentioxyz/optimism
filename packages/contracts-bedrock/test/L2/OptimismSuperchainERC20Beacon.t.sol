@@ -25,8 +25,9 @@ abstract contract OptimismSuperchainERC20Beacon_TestInit is CommonTest {
 /// @notice Contract for testing the `implementation` function of the
 ///         `OptimismSuperchainERC20Beacon` contract.
 contract OptimismSuperchainERC20Beacon_Implementation_Test is OptimismSuperchainERC20Beacon_TestInit {
-    /// @notice Test that calling the implementation function returns the correct implementation address.
-    function test_implementation_isCorrect_works() public view {
+    /// @notice Test that calling the implementation function
+    ///         returns the correct address.
+    function test_implementation_correctAddress_succeeds() public view {
         IBeacon beacon = IBeacon(Predeploys.OPTIMISM_SUPERCHAIN_ERC20_BEACON);
         assertEq(beacon.implementation(), Predeploys.OPTIMISM_SUPERCHAIN_ERC20);
     }
