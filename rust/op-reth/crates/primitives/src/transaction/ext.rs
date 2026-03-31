@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 use alloy_consensus::{
-    Sealable, Sealed, TransactionEnvelope,
+    Sealable, Sealed, Signed, TransactionEnvelope, TxEip1559,
     crypto::RecoveryError,
     transaction::{SignerRecoverable, TxHashRef},
 };
@@ -8,8 +8,8 @@ use alloy_eips::Encodable2718;
 use alloy_primitives::{Address, B256, Signature};
 use alloy_rlp::{BufMut, Decodable, Encodable};
 use op_alloy_consensus::{
-    OpPooledTransaction, OpTransaction, OpTxEnvelope, OpTxType, POST_EXEC_TX_TYPE_ID, TxDeposit,
-    TxPostExec,
+    OpPooledTransaction, OpTransaction, OpTxEnvelope, OpTxType, OpTypedTransaction,
+    POST_EXEC_TX_TYPE_ID, TxDeposit, TxPostExec,
 };
 #[cfg(feature = "reth-codec")]
 use reth_codecs::{
@@ -46,6 +46,33 @@ impl From<OpTxEnvelope> for OpTransactionExt {
 impl From<alloy_consensus::Signed<op_alloy_consensus::OpTypedTransaction>> for OpTransactionExt {
     fn from(value: alloy_consensus::Signed<op_alloy_consensus::OpTypedTransaction>) -> Self {
         Self::Op(value.into())
+    }
+}
+
+impl From<alloy_consensus::Signed<alloy_consensus::TxEip1559>> for OpTransactionExt {
+    fn from(value: alloy_consensus::Signed<alloy_consensus::TxEip1559>) -> Self {
+        Self::Op(value.into())
+    }
+}
+
+impl From<TxDeposit> for OpTransactionExt {
+    fn from(value: TxDeposit) -> Self {
+        Self::Op(value.into())
+    }
+}
+
+impl OpTransactionExt {
+    /// Creates a new unhashed standard OP transaction variant.
+    pub fn new_unhashed(transaction: OpTypedTransaction, signature: Signature) -> Self {
+        Self::Op(OpTxEnvelope::new_unhashed(transaction, signature))
+    }
+
+    /// Returns the inner EIP-1559 transaction if this is a standard OP EIP-1559 transaction.
+    pub const fn as_eip1559(&self) -> Option<&Signed<TxEip1559>> {
+        match self {
+            Self::Op(tx) => tx.as_eip1559(),
+            Self::PostExec(_) => None,
+        }
     }
 }
 

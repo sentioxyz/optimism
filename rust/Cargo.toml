@@ -391,7 +391,7 @@ alloy-chains = { version = "0.2.30", default-features = false }
 alloy-dyn-abi = "1.5.6"
 alloy-eip2124 = { version = "0.2.0", default-features = false }
 alloy-eip7928 = { version = "0.3.2", default-features = false }
-alloy-evm = { version = "=0.27.2", default-features = false }
+alloy-evm = { version = "0.27.2", default-features = false }
 alloy-primitives = { version = "1.5.6", default-features = false, features = [
   "map-foldhash",
 ] }
