@@ -1335,7 +1335,10 @@ contract OPContractsManagerDeployer is OPContractsManagerBase {
         virtual
         returns (bytes memory)
     {
-        return abi.encodeCall(IOptimismPortal.initialize, (_output.systemConfigProxy, _output.anchorStateRegistryProxy));
+        return abi.encodeCall(
+            IOptimismPortal.initialize,
+            (_output.systemConfigProxy, _output.anchorStateRegistryProxy, IETHLockbox(address(0)))
+        );
     }
 
     /// @notice Helper method for encoding the OptimismPortalInterop initializer data.
