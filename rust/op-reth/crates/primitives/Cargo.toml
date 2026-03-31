@@ -18,6 +18,9 @@ reth-db-api.workspace = true
 reth-codecs = { workspace = true, optional = true }
 reth-zstd-compressors = { workspace = true, optional = true }
 bytes = { workspace = true, optional = true }
+# workaround: enabling serde-bincode-compat on reth-primitives-traits can require
+# companion serde/reth-codec features on reth-ethereum-primitives as well.
+reth-ethereum-primitives = { workspace = true, optional = true }
 
 # ethereum
 alloy-primitives.workspace = true
@@ -46,7 +49,6 @@ bincode.workspace = true
 
 proptest-arbitrary-interop.workspace = true
 proptest.workspace = true
-rand_08.workspace = true
 secp256k1 = { workspace = true, features = ["rand"] }
 
 [features]
@@ -81,7 +83,6 @@ serde = [
     "op-alloy-consensus/serde",
     "alloy-eips/serde",
     "rand/serde",
-    "rand_08/serde",
     "bytes/serde",
     "reth-codecs/serde",
 ]
@@ -92,6 +93,10 @@ serde-bincode-compat = [
     "op-alloy-consensus/serde-bincode-compat",
     "reth-primitives-traits/serde-bincode-compat",
     "alloy-eips/serde-bincode-compat",
+    "dep:reth-ethereum-primitives",
+    "reth-ethereum-primitives?/serde-bincode-compat",
+    "reth-ethereum-primitives?/serde",
+    "reth-ethereum-primitives?/reth-codec",
 ]
 arbitrary = [
     "std",

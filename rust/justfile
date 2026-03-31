@@ -134,8 +134,18 @@ bench:
 deny:
   cargo deny --all-features check all
 
+# Install cargo-udeps for the pinned nightly toolchain
+install-udeps:
+  cargo +{{NIGHTLY}} install cargo-udeps --locked
+
 # Check for unused dependencies (requires nightly + cargo-udeps)
 check-udeps:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  if ! cargo +{{NIGHTLY}} udeps --version >/dev/null 2>&1; then
+    echo "cargo-udeps is not installed for {{NIGHTLY}}; installing..."
+    cargo +{{NIGHTLY}} install cargo-udeps --locked
+  fi
   cargo +{{NIGHTLY}} udeps --release --workspace --all-features --all-targets
 
 # Run cargo hack for feature powerset checking

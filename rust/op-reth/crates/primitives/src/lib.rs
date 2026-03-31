@@ -13,6 +13,8 @@ extern crate alloc;
 
 #[cfg(feature = "reth-codec")]
 use bytes as _;
+#[cfg(feature = "serde-bincode-compat")]
+use reth_ethereum_primitives as _;
 #[cfg(feature = "reth-codec")]
 use reth_zstd_compressors as _;
 
