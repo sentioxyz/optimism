@@ -382,7 +382,7 @@ impl<Txs> OpBuilder<'_, Txs> {
             let entries = builder.executor_mut().take_post_exec_entries();
             if !entries.is_empty() {
                 let post_exec_recovered: Recovered<N::SignedTx> =
-                    build_post_exec_recovered_tx(entries).map(|tx| tx.into());
+                    build_post_exec_recovered_tx(entries);
 
                 match builder.execute_transaction(post_exec_recovered) {
                     Ok(_) => {

@@ -57,6 +57,7 @@ fn test_basic_setup() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_setup_custom_precompiles() {
     /// Unichain custom precompiles.
     struct UniPrecompiles;

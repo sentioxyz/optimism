@@ -5,6 +5,6 @@
 //! example is refreshed against the new APIs, keep the crate compiling by
 //! re-exporting the standard OP node type.
 
-#![cfg_attr(not(test), warn(unused_crate_dependencies))]
+#![cfg_attr(not(test), allow(unused_crate_dependencies))]
 
 pub use reth_op::node::OpNode as CustomNode;

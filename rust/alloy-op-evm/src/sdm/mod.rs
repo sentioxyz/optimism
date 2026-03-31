@@ -55,14 +55,14 @@ where
     Spec: alloy_op_hardforks::OpHardforks + Clone,
 {
     fn enable_post_exec_verifier(&mut self, payload: SDMPayload) {
-        OpBlockExecutor::set_post_exec_mode(self, crate::block::SDMExecutionMode::Verify(payload))
+        Self::set_post_exec_mode(self, crate::block::SDMExecutionMode::Verify(payload))
     }
 
     fn take_post_exec_entries(&mut self) -> Vec<SDMGasEntry> {
-        OpBlockExecutor::take_post_exec_entries(self)
+        Self::take_post_exec_entries(self)
     }
 
     fn take_warming_events_by_tx(&mut self) -> Vec<Vec<WarmingRefundEvent>> {
-        OpBlockExecutor::take_warming_events_by_tx(self)
+        Self::take_warming_events_by_tx(self)
     }
 }

@@ -340,7 +340,7 @@ pub fn build_post_exec_tx(entries: Vec<SDMGasEntry>) -> TxPostExec {
 }
 
 /// Check if a transaction type byte identifies a post-exec transaction.
-pub fn is_post_exec_tx(ty: u8) -> bool {
+pub const fn is_post_exec_tx(ty: u8) -> bool {
     ty == POST_EXEC_TX_TYPE_ID
 }
 

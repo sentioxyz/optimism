@@ -101,4 +101,5 @@ arbitrary = [
     "alloy-primitives/arbitrary",
     "alloy-eips/arbitrary",
     "reth-codecs/arbitrary",
+    "reth-db-api/arbitrary",
 ]

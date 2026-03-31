@@ -552,7 +552,6 @@ mod test {
                 transactions: vec![tx_0, tx_1.clone(), post_exec],
                 ..Default::default()
             },
-            ..Default::default()
         });
 
         let converter = OpReceiptConverter::new(reth_storage_api::noop::NoopProvider::<

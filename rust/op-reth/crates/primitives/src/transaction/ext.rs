@@ -26,6 +26,7 @@ use reth_primitives_traits::serde_bincode_compat::RlpBincode;
 use reth_primitives_traits::{InMemorySize, SignedTransaction};
 
 /// A locally-extended OP transaction envelope that adds the synthetic post-exec transaction.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, TransactionEnvelope)]
 #[envelope(tx_type_name = OpTxTypeExt, serde_cfg(feature = "serde"))]
 pub enum OpTransactionExt {

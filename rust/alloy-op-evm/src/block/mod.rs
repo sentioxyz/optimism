@@ -423,7 +423,10 @@ where
         Ok(refund)
     }
 
-    fn canonicalize_result_gas(result: &mut ExecutionResult<E::HaltReason>, post_exec_refund: u64) {
+    const fn canonicalize_result_gas(
+        result: &mut ExecutionResult<E::HaltReason>,
+        post_exec_refund: u64,
+    ) {
         if post_exec_refund == 0 {
             return;
         }

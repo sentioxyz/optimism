@@ -113,7 +113,7 @@ impl CurrentTxState {
         self.intrinsic_warm_slots.clear();
     }
 
-    fn kind(&self) -> Option<PostExecTxKind> {
+    const fn kind(&self) -> Option<PostExecTxKind> {
         self.kind
     }
 
@@ -405,7 +405,7 @@ impl<I> PostExecCompositeInspector<I> {
     }
 
     /// Returns the wrapped user inspector mutably.
-    pub fn inner_mut(&mut self) -> &mut I {
+    pub const fn inner_mut(&mut self) -> &mut I {
         &mut self.inner
     }
 

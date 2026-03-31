@@ -1220,7 +1220,7 @@ impl OpPayloadBuilder {
     }
 
     /// Configure whether the OP payload builder should inject a synthetic post-exec tx.
-    pub fn with_sdm_enabled(mut self, sdm_enabled: bool) -> Self {
+    pub const fn with_sdm_enabled(mut self, sdm_enabled: bool) -> Self {
         self.sdm_enabled = sdm_enabled;
         self
     }

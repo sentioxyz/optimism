@@ -82,7 +82,7 @@ fn normalize_block(block: &RecoveredBlock<OpBlock>) -> NormalizedBlock {
     NormalizedBlock { replay_block, original_indexes, embedded_payload, post_exec_tx_index }
 }
 
-fn into_refund_kind(kind: WarmingRefundKind) -> PostExecReplayRefundKind {
+const fn into_refund_kind(kind: WarmingRefundKind) -> PostExecReplayRefundKind {
     match kind {
         WarmingRefundKind::WarmAccount => PostExecReplayRefundKind::WarmAccount,
         WarmingRefundKind::WarmSload => PostExecReplayRefundKind::WarmSload,
@@ -197,16 +197,29 @@ fn into_replay_payload(payload: SDMPayload) -> PostExecReplayPayload {
     }
 }
 
-fn compare_refunds(
+struct CompareRefundsInput<'a> {
     block_number: u64,
     tx_index: u64,
     raw_gas_used: u64,
     replay_refund: u64,
     payload_refund: Option<u64>,
     receipt_refund: Option<u64>,
-    config: &PostExecReplayConfig,
+    config: &'a PostExecReplayConfig,
+}
+
+fn compare_refunds(
+    input: CompareRefundsInput<'_>,
     mismatches: &mut Vec<PostExecReplayMismatch>,
 ) -> bool {
+    let CompareRefundsInput {
+        block_number,
+        tx_index,
+        raw_gas_used,
+        replay_refund,
+        payload_refund,
+        receipt_refund,
+        config,
+    } = input;
     let mut mismatch = false;
 
     if let Some(payload_refund) = payload_refund &&
@@ -320,13 +333,15 @@ where
             .map(|event| into_refund_event(event, replay_idx as u64, &normalized.original_indexes))
             .collect::<Vec<_>>();
         let mismatch = compare_refunds(
-            block.header().number(),
-            tx_index,
-            raw_gas_used,
-            replay_refund,
-            payload_refund,
-            receipt_refund,
-            &config,
+            CompareRefundsInput {
+                block_number: block.header().number(),
+                tx_index,
+                raw_gas_used,
+                replay_refund,
+                payload_refund,
+                receipt_refund,
+                config: &config,
+            },
             &mut mismatches,
         );
 
@@ -393,7 +408,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::{
-        build_payload_map, compare_refunds, normalize_block, strip_post_exec_tx_for_replay,
+        CompareRefundsInput, build_payload_map, compare_refunds, normalize_block,
+        strip_post_exec_tx_for_replay,
     };
     use crate::{PostExecReplayConfig, PostExecReplayMismatchKind, SDMExecutionMode};
     use alloy_consensus::{BlockBody, Header, Sealable, SignableTransaction, TxLegacy};
@@ -518,7 +534,18 @@ mod tests {
         };
         let mut mismatches = Vec::new();
 
-        let mismatch = compare_refunds(100, 3, 40, 5, Some(7), Some(7), &config, &mut mismatches);
+        let mismatch = compare_refunds(
+            CompareRefundsInput {
+                block_number: 100,
+                tx_index: 3,
+                raw_gas_used: 40,
+                replay_refund: 5,
+                payload_refund: Some(7),
+                receipt_refund: Some(7),
+                config: &config,
+            },
+            &mut mismatches,
+        );
 
         assert!(mismatch);
         assert_eq!(mismatches.len(), 2);
