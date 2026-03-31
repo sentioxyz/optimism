@@ -11,6 +11,11 @@
 #![allow(unused)]
 extern crate alloc;
 
+#[cfg(feature = "reth-codec")]
+use bytes as _;
+#[cfg(feature = "reth-codec")]
+use reth_zstd_compressors as _;
+
 pub mod bedrock;
 
 // Re-export predeploys from op-alloy-consensus

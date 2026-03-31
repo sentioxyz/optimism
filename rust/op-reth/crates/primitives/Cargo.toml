@@ -14,6 +14,10 @@ workspace = true
 [dependencies]
 # reth
 reth-primitives-traits = { workspace = true, features = ["op"] }
+reth-db-api.workspace = true
+reth-codecs = { workspace = true, optional = true }
+reth-zstd-compressors = { workspace = true, optional = true }
+bytes = { workspace = true, optional = true }
 
 # ethereum
 alloy-primitives.workspace = true
@@ -64,6 +68,9 @@ std = [
 alloy-compat = ["op-alloy-consensus/alloy-compat"]
 reth-codec = [
     "std",
+    "dep:reth-codecs",
+    "dep:reth-zstd-compressors",
+    "dep:bytes",
     "reth-primitives-traits/reth-codec",
 ]
 serde = [

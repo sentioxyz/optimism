@@ -266,9 +266,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-evm"
-version = "0.27.3"
+version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b991c370ce44e70a3a9e474087e3d65e42e66f967644ad729dc4cec09a21fd09"
+checksum = "d2ccfe6d724ceabd5518350cfb34f17dd3a6c3cc33579eee94d98101d3a511ff"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -11323,6 +11323,7 @@ name = "reth-optimism-node"
 version = "1.11.3"
 dependencies = [
  "alloy-consensus",
+ "alloy-evm",
  "alloy-genesis",
  "alloy-network",
  "alloy-op-evm",
@@ -11337,6 +11338,7 @@ dependencies = [
  "humantime",
  "op-alloy-consensus",
  "op-alloy-network",
+ "op-alloy-rpc-types",
  "op-alloy-rpc-types-engine",
  "op-revm",
  "reth-chainspec",
@@ -11369,6 +11371,7 @@ dependencies = [
  "reth-revm",
  "reth-rpc",
  "reth-rpc-api",
+ "reth-rpc-convert",
  "reth-rpc-engine-api",
  "reth-rpc-eth-types",
  "reth-rpc-server-types",
@@ -11426,6 +11429,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "reth-optimism-post-exec-replay"
+version = "1.11.3"
+dependencies = [
+ "alloy-consensus",
+ "alloy-eips",
+ "alloy-primitives",
+ "op-alloy-consensus",
+ "reth-evm",
+ "reth-execution-errors",
+ "reth-optimism-evm",
+ "reth-optimism-primitives",
+ "reth-primitives-traits",
+ "revm",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "reth-optimism-primitives"
 version = "1.11.3"
 dependencies = [
@@ -11443,6 +11465,7 @@ dependencies = [
  "rand 0.8.5",
  "rand 0.9.2",
  "reth-codecs",
+ "reth-db-api",
  "reth-primitives-traits",
  "reth-zstd-compressors",
  "rstest",
@@ -11497,6 +11520,7 @@ dependencies = [
  "reth-optimism-flashblocks",
  "reth-optimism-forks",
  "reth-optimism-payload-builder",
+ "reth-optimism-post-exec-replay",
  "reth-optimism-primitives",
  "reth-optimism-trie",
  "reth-optimism-txpool",

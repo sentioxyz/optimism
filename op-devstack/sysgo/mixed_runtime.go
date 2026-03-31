@@ -84,6 +84,9 @@ type MixedSingleChainNodeSpec struct {
 	ELKind      MixedL2ELKind
 	CLKind      MixedL2CLKind
 	IsSequencer bool
+	// SDMEnabled enables the post-exec feature flag on op-reth sequencers.
+	// Kept for compatibility with existing SDM PoC acceptance tests.
+	SDMEnabled bool
 }
 
 type MixedSingleChainPresetConfig struct {
@@ -144,7 +147,7 @@ func NewMixedSingleChainRuntime(t devtest.T, cfg MixedSingleChainPresetConfig) *
 		case MixedL2ELOpGeth:
 			el = startL2ELNode(t, l2Net, jwtPath, jwtSecret, spec.ELKey, identity)
 		case MixedL2ELOpReth:
-			el = startMixedOpRethNode(t, l2Net, spec.ELKey, jwtPath, jwtSecret, metricsRegistrar)
+			el = startMixedOpRethNode(t, l2Net, spec.ELKey, jwtPath, jwtSecret, metricsRegistrar, spec.SDMEnabled)
 		default:
 			require.FailNowf("unsupported EL kind", "unsupported mixed EL kind %q", spec.ELKind)
 		}
@@ -255,6 +258,7 @@ func startMixedOpRethNode(
 	jwtPath string,
 	jwtSecret [32]byte,
 	metricsRegistrar L2MetricsRegistrar,
+	postExecEnabled bool,
 ) *OpReth {
 	tempDir := t.TempDir()
 
@@ -312,6 +316,9 @@ func startMixedOpRethNode(
 
 	if areMetricsEnabled() {
 		args = append(args, "--metrics=127.0.0.1:0")
+	}
+	if postExecEnabled {
+		args = append(args, "--rollup.sdm-enabled")
 	}
 
 	initArgs := []string{

@@ -3,7 +3,7 @@ use alloy_evm::eth::receipt_builder::ReceiptBuilderCtx;
 use alloy_op_evm::block::receipt_builder::OpReceiptBuilder;
 use op_alloy_consensus::{OpDepositReceipt, OpTxType};
 use reth_evm::Evm;
-use reth_optimism_primitives::{OpReceipt, OpTransactionSigned};
+use reth_optimism_primitives::{OpReceipt, OpTransactionSigned, OpTxTypeExt};
 
 /// A builder that operates on op-reth primitive types, specifically [`OpTransactionSigned`] and
 /// [`OpReceipt`].
@@ -17,10 +17,10 @@ impl OpReceiptBuilder for OpRethReceiptBuilder {
 
     fn build_receipt<'a, E: Evm>(
         &self,
-        ctx: ReceiptBuilderCtx<'a, OpTxType, E>,
-    ) -> Result<Self::Receipt, ReceiptBuilderCtx<'a, OpTxType, E>> {
+        ctx: ReceiptBuilderCtx<'a, OpTxTypeExt, E>,
+    ) -> Result<Self::Receipt, ReceiptBuilderCtx<'a, OpTxTypeExt, E>> {
         match ctx.tx_type {
-            OpTxType::Deposit => Err(ctx),
+            OpTxTypeExt::Op(OpTxType::Deposit) => Err(ctx),
             ty => {
                 let receipt = Receipt {
                     // Success flag was added in `EIP-658: Embedding transaction status code in
@@ -31,11 +31,12 @@ impl OpReceiptBuilder for OpRethReceiptBuilder {
                 };
 
                 Ok(match ty {
-                    OpTxType::Legacy => OpReceipt::Legacy(receipt),
-                    OpTxType::Eip1559 => OpReceipt::Eip1559(receipt),
-                    OpTxType::Eip2930 => OpReceipt::Eip2930(receipt),
-                    OpTxType::Eip7702 => OpReceipt::Eip7702(receipt),
-                    OpTxType::Deposit => unreachable!(),
+                    OpTxTypeExt::Op(OpTxType::Legacy) => OpReceipt::Legacy(receipt),
+                    OpTxTypeExt::Op(OpTxType::Eip1559) => OpReceipt::Eip1559(receipt),
+                    OpTxTypeExt::Op(OpTxType::Eip2930) => OpReceipt::Eip2930(receipt),
+                    OpTxTypeExt::Op(OpTxType::Eip7702) => OpReceipt::Eip7702(receipt),
+                    OpTxTypeExt::PostExec => OpReceipt::Eip1559(receipt),
+                    OpTxTypeExt::Op(OpTxType::Deposit) => unreachable!(),
                 })
             }
         }
