@@ -1675,7 +1675,7 @@ contract OPContractsManagerInteropMigrator is OPContractsManagerBase {
             clearGameImplementation(oldDisputeGameFactory, GameTypes.SUPER_CANNON_KONA);
 
             // Migrate the portal to the new ETHLockbox and AnchorStateRegistry.
-            portals[i].migrateToSuperRoots(newEthLockbox, newAnchorStateRegistry);
+            portals[i].migrateToSharedDisputeGame(newEthLockbox, newAnchorStateRegistry);
         }
 
         // Separate context to avoid stack too deep.
@@ -1919,9 +1919,9 @@ contract OPContractsManager is ISemver {
     /// @dev This needs to stay at 6.x.x because the next release will ship OPCMv2. Since we are
     ///      not actually planning to release a 7.x.x of OPCMv1, it needs to stay at 6.x.x to avoid
     ///      errors in the versioning rules of OPCMv2.
-    /// @custom:semver 6.0.5
+    /// @custom:semver 6.1.5
     function version() public pure virtual returns (string memory) {
-        return "6.0.5";
+        return "6.1.5";
     }
 
     OPContractsManagerGameTypeAdder public immutable opcmGameTypeAdder;
