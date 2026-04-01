@@ -70,7 +70,7 @@ func SkipUnlessOpGeth(t devtest.T, reason string) {
 // SkipUnlessOpNode skips the test when the L2 consensus layer is op-node
 // (i.e. DEVSTACK_L2CL_KIND is not "op-node").
 func SkipUnlessOpNode(t devtest.T, reason string) {
-	if MixedL2CLKind(os.Getenv(DevstackL2ELKindEnvVar)) != MixedL2CLOpNode {
+	if MixedL2CLKind(os.Getenv(DevstackL2CLKindEnvVar)) != MixedL2CLOpNode {
 		t.Skipf("skipping on op-node: %s", reason)
 	}
 }
