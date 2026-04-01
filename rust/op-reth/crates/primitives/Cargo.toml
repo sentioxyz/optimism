@@ -85,6 +85,7 @@ serde = [
     "rand/serde",
     "bytes/serde",
     "reth-codecs/serde",
+    "reth-ethereum-primitives?/serde",
 ]
 serde-bincode-compat = [
     "serde",
@@ -107,4 +108,5 @@ arbitrary = [
     "alloy-eips/arbitrary",
     "reth-codecs/arbitrary",
     "reth-db-api/arbitrary",
+    "reth-ethereum-primitives?/arbitrary",
 ]
