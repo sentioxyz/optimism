@@ -1172,6 +1172,7 @@ contract OPContractsManagerDeployer is OPContractsManagerBase {
         // the ETHLockbox in U16 and then upgrade to U16a.
         if (isDevFeatureEnabled(DevFeatures.OPTIMISM_PORTAL_INTEROP)) {
             output.systemConfigProxy.setFeature(Features.ETH_LOCKBOX, true);
+            output.systemConfigProxy.setFeature(Features.INTEROP, true);
         }
 
         // Initialize the OptimismPortal.
