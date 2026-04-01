@@ -57,7 +57,6 @@ pub(super) mod serde_bincode_compat {
     ///     receipt: OpReceipt,
     /// }
     /// ```
-    #[allow(rustdoc::private_doc_tests)]
     #[derive(Debug, Serialize, Deserialize)]
     pub enum OpReceipt<'a> {
         /// Legacy receipt
