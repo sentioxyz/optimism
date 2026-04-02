@@ -18,41 +18,11 @@ COPY --from=monorepo ops/scripts/install_mise.sh /tmp/install_mise.sh
 RUN chmod +x /tmp/install_mise.sh && /tmp/install_mise.sh
 ENV PATH="/root/.local/bin:${PATH}"
 
-# Copy a minimal mise.toml with only the tools needed for this build.
-# The full mise.toml includes pipx, svm-rs, foundry, etc. that are not needed
-# and would add hundreds of MB of downloads + break hermetic builds.
-COPY --from=monorepo mise.toml /app/mise.toml.full
-RUN <<'PYEOF' python3 - /app/mise.toml.full /app/mise.toml
-import sys
-infile, outfile = sys.argv[1], sys.argv[2]
-with open(infile) as f:
-    lines = f.read()
-needed = {'go', 'rust', 'just', 'jq'}
-out = ['[tools]']
-in_tools = False
-for line in lines.split('\n'):
-    if line.strip() == '[tools]':
-        in_tools = True
-        continue
-    if line.strip().startswith('[') and in_tools:
-        in_tools = False
-    if in_tools:
-        key = line.split('=')[0].strip().strip('"')
-        if key in needed:
-            out.append(line)
-out.append('')
-out.append('[tool_alias]')
-out.append('just = "ubi:casey/just"')
-out.append('')
-out.append('[settings]')
-out.append('experimental = true')
-with open(outfile, 'w') as f:
-    f.write('\n'.join(out) + '\n')
-PYEOF
-
+# Install only the tools needed for this build from mise.toml
+COPY --from=monorepo mise.toml /app/mise.toml
 COPY rust-toolchain.toml /app/rust/rust-toolchain.toml
 WORKDIR /app
-RUN mise trust && mise install
+RUN mise trust && mise install go rust just jq
 
 # Ensure mise-installed tools are on PATH
 ENV PATH="/root/.local/share/mise/shims:${PATH}"
