@@ -98,10 +98,12 @@ build-kona-env:
   cd {{KONA_ROOT}}/..
   export MONOREPO_CONTEXT="$(cd .. && pwd)"
 
-  # Build the kona-cannon-prestate target up to the builder stage and tag it
+  # Build the kona-cannon-prestate target up to the builder stage and tag it.
+  # Override cannon-builder platform to single arch — docker driver doesn't support multi-platform.
   docker buildx bake \
     --set "kona-cannon-prestate.target=builder" \
     --set "kona-cannon-prestate.output=type=docker,name=kona-cannon-env:local" \
+    --set "cannon-builder.platform=linux/amd64" \
     --allow "fs=$MONOREPO_CONTEXT" \
     -f kona/docker/docker-bake.hcl \
     kona-cannon-prestate
