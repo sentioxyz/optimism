@@ -76,7 +76,8 @@ COPY rust/op-reth/ /app/rust/op-reth/
 COPY rust/kona/docker/cannon/mips64-unknown-none.json /mips64-unknown-none.json
 RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/app/rust/target \
-    cd /app/rust && just build-kona-client-elf ${VARIANT}
+    cd /app/rust && just build-kona-client-elf ${VARIANT} && \
+    cp /app/rust/target/mips64-unknown-none/release-client-lto/${VARIANT} /app/kona-elf
 
 ################################################################
 #   Generate prestate                                          #
@@ -86,7 +87,7 @@ FROM kona-build-env AS prestate-build
 
 COPY --from=cannon-build /app/cannon/bin/cannon /app/cannon
 RUN /app/cannon load-elf \
-      --path=/app/rust/target/mips64-unknown-none/release-client-lto/${VARIANT} \
+      --path=/app/kona-elf \
       --out=/app/prestate.bin.gz \
       --type multithreaded64-5 && \
     /app/cannon run \
