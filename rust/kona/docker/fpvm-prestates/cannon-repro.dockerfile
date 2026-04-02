@@ -22,9 +22,11 @@ ENV PATH="/root/.local/bin:${PATH}"
 # The full mise.toml includes pipx, svm-rs, foundry, etc. that are not needed
 # and would add hundreds of MB of downloads + break hermetic builds.
 COPY --from=monorepo mise.toml /app/mise.toml.full
-RUN cat /app/mise.toml.full | python3 -c "
+RUN <<'PYEOF' python3 - /app/mise.toml.full /app/mise.toml
 import sys
-lines = sys.stdin.read()
+infile, outfile = sys.argv[1], sys.argv[2]
+with open(infile) as f:
+    lines = f.read()
 needed = {'go', 'rust', 'just', 'jq'}
 out = ['[tools]']
 in_tools = False
@@ -35,18 +37,18 @@ for line in lines.split('\n'):
     if line.strip().startswith('[') and in_tools:
         in_tools = False
     if in_tools:
-        key = line.split('=')[0].strip().strip('\"')
+        key = line.split('=')[0].strip().strip('"')
         if key in needed:
             out.append(line)
 out.append('')
 out.append('[tool_alias]')
-out.append('just = \"ubi:casey/just\"')
+out.append('just = "ubi:casey/just"')
 out.append('')
 out.append('[settings]')
 out.append('experimental = true')
-with open('/app/mise.toml', 'w') as f:
+with open(outfile, 'w') as f:
     f.write('\n'.join(out) + '\n')
-"
+PYEOF
 
 COPY rust-toolchain.toml /app/rust/rust-toolchain.toml
 WORKDIR /app
