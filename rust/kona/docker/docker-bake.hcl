@@ -95,6 +95,13 @@ variable "CANNON_CONTEXT" {
   default = "docker-image://us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon:latest"
 }
 
+// The cannon-builder Docker image providing the MIPS64 cross-compilation toolchain.
+// Defaults to building from local source via the cannon-builder target.
+// Override with a registry image for CI when the image has been pre-published.
+variable "CANNON_BUILDER_CONTEXT" {
+  default = "target:cannon-builder"
+}
+
 // Rust build environment for bare-metal MIPS64r1 (Cannon FPVM ISA).
 // Contains only apt-level MIPS64 cross-compilation packages.
 // Rust, Go, mise, and just are installed on top from pinned version sources.
@@ -118,6 +125,7 @@ target "kona-cannon-prestate" {
   dockerfile = "kona/docker/fpvm-prestates/cannon-repro.dockerfile"
   contexts = {
     cannon = "${CANNON_CONTEXT}"
+    cannon-builder = "${CANNON_BUILDER_CONTEXT}"
     monorepo = "${MONOREPO_CONTEXT}"
   }
   args = {

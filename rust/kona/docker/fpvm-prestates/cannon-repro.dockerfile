@@ -6,8 +6,7 @@
 #   Cannon binary is provided via a named build context.        #
 ################################################################
 
-ARG CANNON_BUILDER_VERSION=v2.0.0
-FROM us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon-builder:${CANNON_BUILDER_VERSION} AS builder
+FROM cannon-builder AS builder
 SHELL ["/bin/bash", "-c"]
 
 ARG VARIANT=kona-client
