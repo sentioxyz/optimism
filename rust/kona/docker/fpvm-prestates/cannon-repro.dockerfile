@@ -37,11 +37,12 @@ COPY ops/scripts/install_mise.sh /tmp/install_mise.sh
 RUN chmod +x /tmp/install_mise.sh && /tmp/install_mise.sh
 ENV PATH="/root/.local/bin:${PATH}"
 
-# Install only the tools needed for this build from mise.toml
+# Install only the non-Rust tools from mise.toml. Rust is managed by
+# rustup so that the nightly toolchain installed below is used for builds.
 COPY mise.toml /app/mise.toml
 COPY rust/rust-toolchain.toml /app/rust/rust-toolchain.toml
 WORKDIR /app
-RUN mise trust && mise install go rust just jq
+RUN mise trust && mise install go just jq
 
 # Ensure mise-installed tools are on PATH.
 # MISE_GLOBAL_CONFIG_FILE is set so shims resolve tool versions even when
@@ -52,8 +53,11 @@ ENV MISE_GLOBAL_CONFIG_FILE="/app/mise.toml"
 # --- Layer 2: Rust nightly (changes when NIGHTLY pin changes) ---
 COPY rust/justfile /app/rust/justfile
 RUN cd /app/rust && just install-nightly
-# Set nightly as the default toolchain so that -Zbuild-std works in docker run
+# Set nightly as the default toolchain so that -Zbuild-std works in docker run.
+# Place rustup's bin dir before mise shims so cargo/rustc resolve to the
+# nightly toolchain managed by rustup, not the stable version from mise.toml.
 RUN rustup default "$(cd /app/rust && just --evaluate NIGHTLY)"
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # --- Layer 3: Rust workspace source ---
 COPY rust/Cargo.toml rust/Cargo.lock /app/rust/
