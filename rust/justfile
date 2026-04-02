@@ -284,18 +284,18 @@ build-kona-reproducible-prestate-variant VARIANT OUTPUT_DIR:
       docker buildx use kona-builder
     fi
 
-    # First, build the cannon image via the root bake file
+    # Build the cannon image via the root bake file with a known local tag
     cd "$MONOREPO_ROOT"
-    docker buildx bake -f docker-bake.hcl cannon --set "cannon.platform=linux/amd64" --load
+    docker buildx bake -f docker-bake.hcl cannon \
+      --set "cannon.platform=linux/amd64" \
+      --set "cannon.tags=cannon-local:latest" \
+      --load
 
-    # Get the cannon image tag
-    CANNON_TAG=$(docker buildx bake -f docker-bake.hcl cannon --print 2>/dev/null | jq -r '.target.cannon.tags[0]')
-
-    # Build kona prestate via the kona bake file, referencing the cannon image
+    # Build kona prestate via the kona bake file, referencing the local cannon image
     cd "{{justfile_directory()}}"
     export CLIENT_BIN="{{VARIANT}}"
     export MONOREPO_CONTEXT="$MONOREPO_ROOT"
-    export CANNON_CONTEXT="docker-image://$CANNON_TAG"
+    export CANNON_CONTEXT="docker-image://cannon-local:latest"
 
     docker buildx bake \
       --set "*.output=$OUTPUT" \
