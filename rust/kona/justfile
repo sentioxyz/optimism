@@ -110,7 +110,7 @@ lint-cannon: build-kona-env
   NIGHTLY=$(cd {{KONA_ROOT}}/.. && just --evaluate NIGHTLY)
   docker run --rm \
     -e RUSTUP_TOOLCHAIN="$NIGHTLY" \
-    -v {{KONA_ROOT}}/..:/workdir:ro \
+    -v {{KONA_ROOT}}/..:/workdir \
     -w /workdir \
     kona-cannon-env:local \
     cargo clippy -p kona-std-fpvm --all-features -Zbuild-std=core,alloc -Zjson-target-spec -- -D warnings
@@ -136,7 +136,7 @@ build-cannon-client: build-kona-env
   NIGHTLY=$(cd {{KONA_ROOT}}/.. && just --evaluate NIGHTLY)
   docker run --rm \
     -e RUSTUP_TOOLCHAIN="$NIGHTLY" \
-    -v {{KONA_ROOT}}/..:/workdir:ro \
+    -v {{KONA_ROOT}}/..:/workdir \
     -w /workdir \
     kona-cannon-env:local \
     cargo build -Zbuild-std=core,alloc -Zjson-target-spec -p kona-client --bin kona-client --locked --profile release-client-lto
