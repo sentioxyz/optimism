@@ -25,9 +25,6 @@ kona-rpc = { workspace = true, features = ["client"] }
 kona-peers.workspace = true
 kona-macros.workspace = true
 
-# rollup-boost
-rollup-boost.workspace = true
-
 # alloy
 alloy-chains.workspace = true
 alloy-signer.workspace = true
@@ -68,20 +65,6 @@ http-body-util.workspace = true
 
 # metrics
 metrics = { workspace = true, optional = true }
-
-[dev-dependencies]
-rstest.workspace = true
-arbitrary.workspace = true
-rand.workspace = true
-anyhow.workspace = true
-backon.workspace = true
-http.workspace = true
-mockall.workspace = true
-alloy-primitives = { workspace = true, features = ["k256"] }
-alloy-rpc-types-engine = { workspace = true, features = ["arbitrary"] }
-alloy-consensus = { workspace = true, features = ["arbitrary"] }
-op-alloy-consensus = { workspace = true, features = ["arbitrary", "k256"] }
-kona-derive = {workspace = true, features = ["test-utils"]}
 
 [features]
 default = []

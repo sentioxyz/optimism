@@ -44,7 +44,3 @@ notify.workspace = true
 
 [features]
 default = []
-
-[dev-dependencies]
-tokio.workspace = true
-serde_json.workspace = true

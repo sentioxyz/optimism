@@ -616,8 +616,6 @@ ratatui = "0.30.0"
 rayon = "1.11.0"
 reqwest = { version = "0.13.2", default-features = false, features = ["query"] }
 ringbuffer = "0.16.0"
-rollup-boost = "0.7.13"
-rollup-boost-types = "0.1.0"
 rustc-hash = { version = "2.1", default-features = false }
 rustls = { version = "0.23", default-features = false }
 rustls-pemfile = { version = "2.2", default-features = false }
@@ -649,8 +647,7 @@ snmalloc-rs = { version = "0.3.8", features = ["build_cc"] }
 rocksdb = { version = "0.24.0", default-features = false }
 
 [patch.crates-io]
-# Duplicated by: reth-payload-primitives, reth-engine-local (reth git), rollup-boost,
-# rollup-boost-types (crates.io)
+# Duplicated by: reth-payload-primitives, reth-engine-local (reth git)
 op-alloy-rpc-types-engine = { path = "op-alloy/crates/rpc-types-engine" }
 # Duplicated by: reth-codecs, reth-db-api, reth-primitives-traits, reth-rpc-convert (reth git)
 op-alloy-consensus = { path = "op-alloy/crates/consensus" }

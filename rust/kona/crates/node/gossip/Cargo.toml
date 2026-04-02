@@ -55,20 +55,6 @@ derive_more = { workspace = true, features = ["display", "deref", "debug"] }
 # `metrics` feature
 metrics = { workspace = true, optional = true }
 
-[dev-dependencies]
-tempfile.workspace = true
-multihash.workspace = true
-serde_json.workspace = true
-alloy-eips.workspace = true
-alloy-chains.workspace = true
-
-rand = { workspace = true, features = ["thread_rng"] }
-arbitrary = { workspace = true, features = ["derive"] }
-alloy-primitives = { workspace = true, features = ["arbitrary"] }
-alloy-rpc-types-engine = { workspace = true, features = ["std"] }
-alloy-consensus = { workspace = true, features = ["arbitrary", "k256"] }
-op-alloy-consensus = { workspace = true, features = ["arbitrary", "k256"] }
-
 [features]
 default = []
 metrics = [ "dep:metrics", "kona-disc/metrics", "libp2p/metrics" ]
