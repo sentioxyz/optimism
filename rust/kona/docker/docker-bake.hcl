@@ -78,38 +78,26 @@ target "generic" {
 //                        Proof Images                        //
 ////////////////////////////////////////////////////////////////
 
-// The path to the monorepo root, used to build cannon from local source.
+// The `kona-client` binary variant to build.
+// Valid options: `kona-client` (single-chain), `kona-client-int` (interop)
+variable "CLIENT_BIN" {
+  default = "kona-client"
+}
+
+// The path to the monorepo root, used to access shared files (mise.toml, install_mise.sh).
 variable "MONOREPO_CONTEXT" {
   default = ".."
 }
 
-// The `kona-client` binary to use in the `kona-cannon-prestate` target.
-//
-// You can override this if you'd like to use a different `kona-client` binary to generate
-// the prestate.
-//
-// Valid options:
-// - `kona` (single-chain)
-// - `kona-int` (interop)
-variable "CLIENT_BIN" {
-  default = "kona"
-
+// The cannon Docker image to use for prestate generation.
+// Set by the justfile to reference the root docker-bake cannon target output.
+variable "CANNON_CONTEXT" {
+  default = "docker-image://us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon:latest"
 }
 
-// Enables custom chain configurations to be built into kona artifacts
-variable "KONA_CUSTOM_CONFIGS" {
-  default = "false"
-
-}
-
-// The build context for custom chain configurations to add to the prestate build
-variable "CUSTOM_CONFIGS_CONTEXT" {
-  default = ""
-
-}
-
-
-// Rust build environment for bare-metal MIPS64r1 (Cannon FPVM ISA)
+// Rust build environment for bare-metal MIPS64r1 (Cannon FPVM ISA).
+// Contains only apt-level MIPS64 cross-compilation packages.
+// Rust, Go, mise, and just are installed on top from pinned version sources.
 target "cannon-builder" {
   inherits = ["docker-metadata-action"]
   context = "docker/cannon"
@@ -121,18 +109,19 @@ target "cannon-builder" {
   platforms = split(",", PLATFORMS)
 }
 
-// Prestate builder for kona-client with Cannon FPVM
+// Reproducible prestate builder for kona-client with Cannon FPVM.
+// Build logic lives in rust/justfile; the Dockerfile is a thin environment wrapper.
+// Cannon binary is provided via a named context from the root docker-bake cannon target.
 target "kona-cannon-prestate" {
   inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "kona/docker/fpvm-prestates/cannon-repro.dockerfile"
   contexts = {
-    custom_configs = "${CUSTOM_CONFIGS_CONTEXT}"
+    cannon = "${CANNON_CONTEXT}"
     monorepo = "${MONOREPO_CONTEXT}"
   }
   args = {
-    CLIENT_BIN = "${CLIENT_BIN}"
-    KONA_CUSTOM_CONFIGS = "${KONA_CUSTOM_CONFIGS}"
+    VARIANT = "${CLIENT_BIN}"
   }
   # Only build on linux/amd64 for a single source of reproducibility.
   platforms = ["linux/amd64"]

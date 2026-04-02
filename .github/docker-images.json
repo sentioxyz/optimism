@@ -126,7 +126,7 @@
       "paths": ["rust/**"]
     },
     "cannon-builder": {
-      "type": "rust",
+      "type": "base",
       "check": "none",
       "paths": ["rust/kona/docker/cannon/**"]
     }

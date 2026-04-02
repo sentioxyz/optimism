@@ -1,95 +1,94 @@
 ################################################################
-#              Build Cannon from local monorepo                #
+#   Reproducible kona prestate build — thin environment wrapper #
+#                                                               #
+#   Build logic lives in rust/justfile.                         #
+#   This Dockerfile provides a fixed environment and calls it.  #
+#   Cannon binary is provided via a named build context.        #
 ################################################################
 
-FROM golang:1.24.10-alpine3.21 AS cannon-build
-
-RUN apk add --no-cache bash just
-
-# Copy monorepo source needed for the cannon build
-COPY --from=monorepo go.mod go.sum /optimism/
-COPY --from=monorepo cannon/ /optimism/cannon/
-COPY --from=monorepo op-service/ /optimism/op-service/
-COPY --from=monorepo op-preimage/ /optimism/op-preimage/
-COPY --from=monorepo justfiles/ /optimism/justfiles/
-
-# Build cannon from local source
-RUN cd /optimism/cannon && \
-  just cannon && \
-  cp bin/cannon /cannon-bin
-
-################################################################
-#            Build kona-client from local source               #
-################################################################
-
-FROM us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon-builder:v1.0.0 AS client-build
+ARG CANNON_BUILDER_VERSION=v2.0.0
+FROM us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon-builder:${CANNON_BUILDER_VERSION} AS builder
 SHELL ["/bin/bash", "-c"]
 
-ARG CLIENT_BIN
-ARG KONA_CUSTOM_CONFIGS
+ARG VARIANT=kona-client
 
-COPY --from=custom_configs / /usr/local/kona-custom-configs
+# --- Layer 1: mise (changes rarely) ---
+# Install mise using the monorepo's pinned version script (same as CI)
+COPY --from=monorepo ops/scripts/install_mise.sh /tmp/install_mise.sh
+RUN chmod +x /tmp/install_mise.sh && /tmp/install_mise.sh
+ENV PATH="/root/.local/bin:${PATH}"
 
-# Copy kona source from build context
-COPY . /kona
+# Copy a minimal mise.toml with only the tools needed for this build.
+# The full mise.toml includes pipx, svm-rs, foundry, etc. that are not needed
+# and would add hundreds of MB of downloads + break hermetic builds.
+COPY --from=monorepo mise.toml /app/mise.toml.full
+RUN cat /app/mise.toml.full | python3 -c "
+import sys
+lines = sys.stdin.read()
+needed = {'go', 'rust', 'just', 'jq'}
+out = ['[tools]']
+in_tools = False
+for line in lines.split('\n'):
+    if line.strip() == '[tools]':
+        in_tools = True
+        continue
+    if line.strip().startswith('[') and in_tools:
+        in_tools = False
+    if in_tools:
+        key = line.split('=')[0].strip().strip('\"')
+        if key in needed:
+            out.append(line)
+out.append('')
+out.append('[tool_alias]')
+out.append('just = \"ubi:casey/just\"')
+out.append('')
+out.append('[settings]')
+out.append('experimental = true')
+with open('/app/mise.toml', 'w') as f:
+    f.write('\n'.join(out) + '\n')
+"
 
-ENV KONA_CUSTOM_CONFIGS=$KONA_CUSTOM_CONFIGS
-ENV KONA_CUSTOM_CONFIGS_DIR=/usr/local/kona-custom-configs
+COPY rust-toolchain.toml /app/rust/rust-toolchain.toml
+WORKDIR /app
+RUN mise trust && mise install
 
-# Build kona-client
-# Override the target spec baked into the cannon-builder image (which has
-# target-c-int-width: 64) with the corrected one from the source tree.
-COPY kona/docker/cannon/mips64-unknown-none.json /mips64-unknown-none.json
-RUN cd kona && \
-  cargo build -Zbuild-std=core,alloc -Zjson-target-spec -p kona-client --bin $CLIENT_BIN --locked --profile release-client-lto && \
-  mv ./target/mips64-unknown-none/release-client-lto/$CLIENT_BIN /kona-client-elf
+# Ensure mise-installed tools are on PATH
+ENV PATH="/root/.local/share/mise/shims:${PATH}"
 
-################################################################
-#      Create `prestate.bin.gz` + `prestate-proof.json`        #
-################################################################
+# --- Layer 2: Rust nightly (changes when NIGHTLY pin changes) ---
+COPY justfile /app/rust/justfile
+RUN cd /app/rust && just install-nightly
 
-FROM ubuntu:22.04 AS prestate-build
-SHELL ["/bin/bash", "-c"]
+# --- Layer 3: Rust workspace source ---
+COPY Cargo.toml Cargo.lock /app/rust/
+COPY .cargo/ /app/rust/.cargo/
+COPY kona/ /app/rust/kona/
+COPY op-alloy/ /app/rust/op-alloy/
+COPY alloy-op-evm/ /app/rust/alloy-op-evm/
+COPY alloy-op-hardforks/ /app/rust/alloy-op-hardforks/
+# op-reth is a workspace member but not a kona-client dependency.
+# We need its Cargo.toml files so the workspace resolves.
+COPY op-reth/ /app/rust/op-reth/
 
-ARG UID=10001
-ARG GID=10001
+# --- Layer 4: Build kona-client ELF ---
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/app/rust/target \
+    cd /app/rust && just build-kona-client-elf ${VARIANT}
 
-RUN groupadd --gid ${GID} app \
- && useradd  --uid ${UID} --gid ${GID} \
-            --home-dir /home/app --create-home \
-            --shell /usr/sbin/nologin \
-            app
-
-# Use a writable workspace owned by the non-root user
-WORKDIR /work
-RUN chown ${UID}:${GID} /work
-
-# Copy cannon binary
-COPY --from=cannon-build /cannon-bin /work/cannon
-
-# Copy kona-client binary
-COPY --from=client-build /kona-client-elf /work/kona-client-elf
-
-# Make the binaries executable
-RUN chmod 0555 /work/cannon /work/kona-client-elf
-
-USER ${UID}:${GID}
-
-# Create `prestate.bin.gz`
-RUN /work/cannon load-elf \
-  --path=/work/kona-client-elf \
-  --out=/work/prestate.bin.gz \
-  --type multithreaded64-5
-
-# Create `prestate-proof.json`
-RUN /work/cannon run \
-  --proof-at "=0" \
-  --stop-at "=1" \
-  --input /work/prestate.bin.gz \
-  --meta /work/meta.json \
-  --proof-fmt "/work/%d.json" \
-  --output "" && \
-  mv /work/0.json /work/prestate-proof.json
+# --- Layer 5: Generate prestate using cannon from named context ---
+COPY --from=cannon /usr/local/bin/cannon /app/cannon
+RUN /app/cannon load-elf \
+      --path=/app/rust/target/mips64-unknown-none/release-client-lto/${VARIANT} \
+      --out=/app/prestate.bin.gz \
+      --type multithreaded64-5 && \
+    /app/cannon run \
+      --proof-at "=0" \
+      --stop-at "=1" \
+      --input /app/prestate.bin.gz \
+      --meta /app/meta.json \
+      --proof-fmt "/app/%d.json" \
+      --output "" && \
+    mv /app/0.json /app/prestate-proof.json
 
 ################################################################
 #                       Export Artifacts                       #
@@ -97,8 +96,6 @@ RUN /work/cannon run \
 
 FROM scratch AS export-stage
 
-COPY --from=prestate-build /work/cannon .
-COPY --from=prestate-build /work/kona-client-elf .
-COPY --from=prestate-build /work/prestate.bin.gz .
-COPY --from=prestate-build /work/prestate-proof.json .
-COPY --from=prestate-build /work/meta.json .
+COPY --from=builder /app/prestate.bin.gz .
+COPY --from=builder /app/prestate-proof.json .
+COPY --from=builder /app/meta.json .

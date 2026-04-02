@@ -89,13 +89,30 @@ fmt-native-check:
 lint-native: fmt-native-check lint-docs
   cargo clippy --workspace --all-features --all-targets -- -D warnings
 
-# Lint the workspace (mips arch). Currently, only the `kona-std-fpvm` crate is linted for the `cannon` target, as it is the only crate with architecture-specific code.
-lint-cannon:
-  docker run \
-    --rm \
-    -v {{KONA_ROOT}}/../:/workdir \
-    -w="/workdir" \
-    us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon-builder:v1.0.0 cargo clippy -p kona-std-fpvm --all-features -Zbuild-std=core,alloc -Zjson-target-spec -- -D warnings
+# Build the kona reproducible build environment as a local Docker image.
+# Reused by lint-cannon and build-cannon-client.
+# Uses docker buildx bake to resolve named contexts (cannon, monorepo).
+build-kona-env:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd {{KONA_ROOT}}/..
+  export MONOREPO_CONTEXT="$(cd .. && pwd)"
+
+  # Build the kona-cannon-prestate target up to the builder stage and tag it
+  docker buildx bake \
+    --set "kona-cannon-prestate.target=builder" \
+    --set "kona-cannon-prestate.output=type=docker,name=kona-cannon-env:local" \
+    -f kona/docker/docker-bake.hcl \
+    kona-cannon-prestate
+
+# Lint the workspace (mips arch) inside the reproducible build environment.
+# Uses the same Docker environment as the prestate build to validate against the release toolchain.
+lint-cannon: build-kona-env
+  docker run --rm \
+    -v {{KONA_ROOT}}/..:/workdir:ro \
+    -w /workdir \
+    kona-cannon-env:local \
+    cargo clippy -p kona-std-fpvm --all-features -Zbuild-std=core,alloc -Zjson-target-spec -- -D warnings
 
 
 # Lint the Rust documentation
@@ -111,13 +128,13 @@ build-native *args='':
   #!/usr/bin/env bash
   cargo build --workspace $@
 
-# Build `kona-client` for the `cannon` target.
-build-cannon-client:
-  docker run \
-    --rm \
-    -v {{KONA_ROOT}}/../:/workdir \
-    -w="/workdir" \
-    us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon-builder:v1.0.0 cargo build -Zbuild-std=core,alloc -Zjson-target-spec -p kona-client --bin kona-client --profile release-client-lto
+# Build `kona-client` for the `cannon` target using the reproducible build environment.
+build-cannon-client: build-kona-env
+  docker run --rm \
+    -v {{KONA_ROOT}}/..:/workdir:ro \
+    -w /workdir \
+    kona-cannon-env:local \
+    cargo build -Zbuild-std=core,alloc -Zjson-target-spec -p kona-client --bin kona-client --locked --profile release-client-lto
 
 
 # Check for unused dependencies in the crate graph.
