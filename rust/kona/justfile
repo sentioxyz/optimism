@@ -105,7 +105,11 @@ build-kona-env:
 # Lint the workspace (mips arch) inside the reproducible build environment.
 # Uses the same Docker environment as the prestate build to validate against the release toolchain.
 lint-cannon: build-kona-env
+  #!/usr/bin/env bash
+  set -euo pipefail
+  NIGHTLY=$(cd {{KONA_ROOT}}/.. && just --evaluate NIGHTLY)
   docker run --rm \
+    -e RUSTUP_TOOLCHAIN="$NIGHTLY" \
     -v {{KONA_ROOT}}/..:/workdir:ro \
     -w /workdir \
     kona-cannon-env:local \
@@ -127,7 +131,11 @@ build-native *args='':
 
 # Build `kona-client` for the `cannon` target using the reproducible build environment.
 build-cannon-client: build-kona-env
+  #!/usr/bin/env bash
+  set -euo pipefail
+  NIGHTLY=$(cd {{KONA_ROOT}}/.. && just --evaluate NIGHTLY)
   docker run --rm \
+    -e RUSTUP_TOOLCHAIN="$NIGHTLY" \
     -v {{KONA_ROOT}}/..:/workdir:ro \
     -w /workdir \
     kona-cannon-env:local \
