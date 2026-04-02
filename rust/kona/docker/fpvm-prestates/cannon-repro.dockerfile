@@ -6,7 +6,7 @@
 #   Cannon binary is provided via a named build context.        #
 ################################################################
 
-FROM cannon-builder AS builder
+FROM cannon-builder AS kona-build-env
 SHELL ["/bin/bash", "-c"]
 
 ARG VARIANT=kona-client
@@ -46,7 +46,13 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/app/rust/target \
     cd /app/rust && just build-kona-client-elf ${VARIANT}
 
-# --- Layer 5: Generate prestate using cannon from named context ---
+################################################################
+#   Generate prestate using cannon from named context           #
+################################################################
+
+FROM kona-build-env AS prestate-build
+
+# Copy cannon binary from named context
 COPY --from=cannon /usr/local/bin/cannon /app/cannon
 RUN /app/cannon load-elf \
       --path=/app/rust/target/mips64-unknown-none/release-client-lto/${VARIANT} \
@@ -67,6 +73,6 @@ RUN /app/cannon load-elf \
 
 FROM scratch AS export-stage
 
-COPY --from=builder /app/prestate.bin.gz .
-COPY --from=builder /app/prestate-proof.json .
-COPY --from=builder /app/meta.json .
+COPY --from=prestate-build /app/prestate.bin.gz .
+COPY --from=prestate-build /app/prestate-proof.json .
+COPY --from=prestate-build /app/meta.json .
