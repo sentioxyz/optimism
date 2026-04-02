@@ -139,7 +139,7 @@ build-cannon-client: build-kona-env
     -v {{KONA_ROOT}}/..:/workdir \
     -w /workdir \
     kona-cannon-env:local \
-    cargo build -Zbuild-std=core,alloc -Zjson-target-spec -p kona-client --bin kona-client --locked --profile release-client-lto
+    cargo build -Zbuild-std=core,alloc -Zjson-target-spec -p kona-client --bin kona-client --profile release-client-lto
 
 
 # Check for unused dependencies in the crate graph.

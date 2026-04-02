@@ -71,9 +71,8 @@ COPY rust/alloy-op-hardforks/ /app/rust/alloy-op-hardforks/
 COPY rust/op-reth/ /app/rust/op-reth/
 
 # --- Layer 4: Build kona-client ELF ---
-# Override the target spec baked into the cannon-builder image (which has
-# target-c-int-width: 64) with the corrected one from the source tree.
-COPY rust/kona/docker/cannon/mips64-unknown-none.json /mips64-unknown-none.json
+# build-kona-client-elf sets CARGO_BUILD_TARGET to the corrected target spec
+# from the source tree, overriding cannon-builder's baked-in spec.
 RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/app/rust/target \
     cd /app/rust && just build-kona-client-elf ${VARIANT} && \
