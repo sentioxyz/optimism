@@ -104,16 +104,13 @@ build-kona-env:
 
 # Lint the workspace (mips arch) inside the reproducible build environment.
 # Uses the same Docker environment as the prestate build to validate against the release toolchain.
+# Runs `just lint-kona-cannon` inside the container, which sets up the MIPS64 cross-compilation env.
 lint-cannon: build-kona-env
-  #!/usr/bin/env bash
-  set -euo pipefail
-  NIGHTLY=$(cd {{KONA_ROOT}}/.. && just --evaluate NIGHTLY)
   docker run --rm \
-    -e RUSTUP_TOOLCHAIN="$NIGHTLY" \
     -v {{KONA_ROOT}}/..:/workdir \
     -w /workdir \
     kona-cannon-env:local \
-    cargo clippy -p kona-std-fpvm --all-features -Zbuild-std=core,alloc -Zjson-target-spec -- -D warnings
+    just lint-kona-cannon
 
 
 # Lint the Rust documentation
@@ -133,13 +130,11 @@ build-native *args='':
 build-cannon-client: build-kona-env
   #!/usr/bin/env bash
   set -euo pipefail
-  NIGHTLY=$(cd {{KONA_ROOT}}/.. && just --evaluate NIGHTLY)
   docker run --rm \
-    -e RUSTUP_TOOLCHAIN="$NIGHTLY" \
     -v {{KONA_ROOT}}/..:/workdir \
     -w /workdir \
     kona-cannon-env:local \
-    cargo build -Zbuild-std=core,alloc -Zjson-target-spec -p kona-client --bin kona-client --profile release-client-lto
+    just build-kona-client-elf kona-client
 
 
 # Check for unused dependencies in the crate graph.

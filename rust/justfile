@@ -212,6 +212,22 @@ build-kona-client-elf VARIANT:
       --locked \
       --profile release-client-lto
 
+# Lint kona-std-fpvm for the MIPS64 cannon target
+lint-kona-cannon:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    just install-nightly
+
+    export CC_mips64_unknown_none=mips64-linux-gnuabi64-gcc
+    export CXX_mips64_unknown_none=mips64-linux-gnuabi64-g++
+    export CARGO_TARGET_MIPS64_UNKNOWN_NONE_LINKER=mips64-linux-gnuabi64-gcc
+    export RUSTFLAGS="-Clink-arg=-e_start -Cllvm-args=-mno-check-zero-division"
+    export CARGO_BUILD_TARGET="{{MIPS64_TARGET_SPEC}}"
+    export RUSTUP_TOOLCHAIN="{{NIGHTLY}}"
+
+    cargo clippy -p kona-std-fpvm --all-features -Zbuild-std=core,alloc -Zjson-target-spec -- -D warnings
+
 # Build all kona prestates (runs natively — use build-kona-reproducible-prestate for Docker)
 build-kona-prestates: build-kona-cannon-prestate build-kona-interop-prestate
 
