@@ -70,13 +70,12 @@ ENV PATH="/root/.local/share/mise/shims:${PATH}"
 ENV MISE_GLOBAL_CONFIG_FILE="/app/mise.toml"
 
 # --- Layer 2: Rust nightly (changes when NIGHTLY pin changes) ---
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain none
+ENV PATH="/root/.cargo/bin:${PATH}"
 COPY rust/justfile /app/rust/justfile
 RUN cd /app/rust && just install-nightly
 # Set nightly as the default toolchain so that -Zbuild-std works in docker run.
-# Place rustup's bin dir before mise shims so cargo/rustc resolve to the
-# nightly toolchain managed by rustup, not the stable version from mise.toml.
 RUN rustup default "$(cd /app/rust && just --evaluate NIGHTLY)"
-ENV PATH="/root/.cargo/bin:${PATH}"
 
 # --- Layer 3: Rust workspace source ---
 COPY rust/Cargo.toml rust/Cargo.lock /app/rust/
