@@ -731,10 +731,11 @@ reth-db = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3
 reth-db-api = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-db-common = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-db-models = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
-reth-discv = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
+reth-discv4 = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
+reth-discv5 = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-dns-discovery = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-downloaders = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
-reth-e = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
+reth-e2e-test-utils = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-ecies = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-engine-local = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-engine-primitives = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
@@ -772,7 +773,7 @@ reth-net-banlist = { git = "https://github.com/sentioxyz/reth", branch = "releas
 reth-net-nat = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-network = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-network-api = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
-reth-network-p = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
+reth-network-p2p = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-network-peers = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-network-types = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-nippy-jar = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
@@ -800,7 +801,7 @@ reth-rpc-api = { git = "https://github.com/sentioxyz/reth", branch = "release/v1
 reth-rpc-api-testing-util = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-rpc-builder = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-rpc-convert = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
-reth-rpc-e = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
+reth-rpc-e2e-tests = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-rpc-engine-api = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-rpc-eth-api = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-rpc-eth-types = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
@@ -826,4 +827,3 @@ reth-trie-db = { git = "https://github.com/sentioxyz/reth", branch = "release/v1
 reth-trie-parallel = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-trie-sparse = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
 reth-zstd-compressors = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
-reth = { git = "https://github.com/sentioxyz/reth", branch = "release/v1.11.3" }
