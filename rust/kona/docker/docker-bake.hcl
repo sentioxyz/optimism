@@ -107,7 +107,7 @@ variable "CANNON_BUILDER_CONTEXT" {
 // Rust, Go, mise, and just are installed on top from pinned version sources.
 target "cannon-builder" {
   inherits = ["docker-metadata-action"]
-  context = "docker/cannon"
+  context = "kona/docker/cannon"
   dockerfile = "cannon.dockerfile"
   args = {
     HOST_UID = "${HOST_UID}"
