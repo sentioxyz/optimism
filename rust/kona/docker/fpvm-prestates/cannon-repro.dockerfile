@@ -9,7 +9,7 @@
 #              Build Cannon from local monorepo                #
 ################################################################
 
-FROM golang:1.24.13-alpine3.21 AS cannon-build
+FROM golang:1.24.13-alpine3.22 AS cannon-build
 
 RUN apk add --no-cache bash just
 
@@ -52,6 +52,8 @@ ENV MISE_GLOBAL_CONFIG_FILE="/app/mise.toml"
 # --- Layer 2: Rust nightly (changes when NIGHTLY pin changes) ---
 COPY rust/justfile /app/rust/justfile
 RUN cd /app/rust && just install-nightly
+# Set nightly as the default toolchain so that -Zbuild-std works in docker run
+RUN rustup default "$(cd /app/rust && just --evaluate NIGHTLY)"
 
 # --- Layer 3: Rust workspace source ---
 COPY rust/Cargo.toml rust/Cargo.lock /app/rust/
