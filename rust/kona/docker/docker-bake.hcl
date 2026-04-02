@@ -78,30 +78,6 @@ target "generic" {
 //                        Proof Images                        //
 ////////////////////////////////////////////////////////////////
 
-// The `kona-client` binary variant to build.
-// Valid options: `kona-client` (single-chain), `kona-client-int` (interop)
-variable "CLIENT_BIN" {
-  default = "kona-client"
-}
-
-// The path to the monorepo root, used to access shared files (mise.toml, install_mise.sh).
-variable "MONOREPO_CONTEXT" {
-  default = ".."
-}
-
-// The cannon Docker image to use for prestate generation.
-// Set by the justfile to reference the root docker-bake cannon target output.
-variable "CANNON_CONTEXT" {
-  default = "docker-image://us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon:latest"
-}
-
-// The cannon-builder Docker image providing the MIPS64 cross-compilation toolchain.
-// Defaults to building from local source via the cannon-builder target.
-// Override with a registry image for CI when the image has been pre-published.
-variable "CANNON_BUILDER_CONTEXT" {
-  default = "target:cannon-builder"
-}
-
 // Rust build environment for bare-metal MIPS64r1 (Cannon FPVM ISA).
 // Contains only apt-level MIPS64 cross-compilation packages.
 // Rust, Go, mise, and just are installed on top from pinned version sources.
@@ -114,23 +90,4 @@ target "cannon-builder" {
     HOST_GID = "${HOST_GID}"
   }
   platforms = split(",", PLATFORMS)
-}
-
-// Reproducible prestate builder for kona-client with Cannon FPVM.
-// Build logic lives in rust/justfile; the Dockerfile is a thin environment wrapper.
-// Cannon binary is provided via a named context from the root docker-bake cannon target.
-target "kona-cannon-prestate" {
-  inherits = ["docker-metadata-action"]
-  context = "."
-  dockerfile = "kona/docker/fpvm-prestates/cannon-repro.dockerfile"
-  contexts = {
-    cannon = "${CANNON_CONTEXT}"
-    cannon-builder = "${CANNON_BUILDER_CONTEXT}"
-    monorepo = "${MONOREPO_CONTEXT}"
-  }
-  args = {
-    VARIANT = "${CLIENT_BIN}"
-  }
-  # Only build on linux/amd64 for a single source of reproducibility.
-  platforms = ["linux/amd64"]
 }

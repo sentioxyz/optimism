@@ -266,8 +266,8 @@ build-kona-prestate VARIANT OUTPUT_DIR:
     echo "Prestate for {{VARIANT}}: ${HASH}"
 
 # Build a single reproducible kona prestate variant via Docker.
-# Uses docker buildx bake with the cannon target from the root docker-bake.hcl
-# to provide the cannon binary, keeping the build context scoped to rust/.
+# Cannon is built from source as a stage within the Dockerfile.
+# Build context is the monorepo root (same pattern as op-program).
 build-kona-reproducible-prestate-variant VARIANT OUTPUT_DIR:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -275,34 +275,13 @@ build-kona-reproducible-prestate-variant VARIANT OUTPUT_DIR:
     MONOREPO_ROOT="{{justfile_directory()}}/.."
     OUTPUT="{{KONA_DIR}}/{{OUTPUT_DIR}}"
 
-    # Ensure a buildx builder exists that supports platform selection.
-    # The default "docker" driver does not support --platform in bake;
-    # a "docker-container" driver builder is required.
-    if ! docker buildx inspect kona-builder &>/dev/null; then
-      docker buildx create --name kona-builder --driver docker-container --use
-    else
-      docker buildx use kona-builder
-    fi
-
-    # Build the cannon image via the root bake file with a known local tag
-    cd "$MONOREPO_ROOT"
-    docker buildx bake -f docker-bake.hcl cannon \
-      --set "cannon.platform=linux/amd64" \
-      --set "cannon.tags=cannon-local:latest" \
-      --load
-
-    # Build kona prestate via the kona bake file, referencing the local cannon image
-    cd "{{justfile_directory()}}"
-    export CLIENT_BIN="{{VARIANT}}"
-    export MONOREPO_CONTEXT="$MONOREPO_ROOT"
-    export CANNON_CONTEXT="docker-image://cannon-local:latest"
-
-    docker buildx bake \
-      --set "*.output=$OUTPUT" \
-      --set "cannon-builder.platform=linux/amd64" \
-      --allow "fs=$MONOREPO_ROOT" \
-      -f kona/docker/docker-bake.hcl \
-      kona-cannon-prestate
+    docker build \
+      --platform linux/amd64 \
+      --build-arg VARIANT={{VARIANT}} \
+      --output "$OUTPUT" \
+      --progress plain \
+      -f "{{KONA_DIR}}/docker/fpvm-prestates/cannon-repro.dockerfile" \
+      "$MONOREPO_ROOT"
 
     # Add hash-named copy for challenger lookup
     HASH=$(jq -r .pre "$OUTPUT/prestate-proof.json")

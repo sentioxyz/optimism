@@ -91,23 +91,16 @@ lint-native: fmt-native-check lint-docs
 
 # Build the kona reproducible build environment as a local Docker image.
 # Reused by lint-cannon and build-cannon-client.
-# Uses docker buildx bake to resolve named contexts (cannon, monorepo).
 build-kona-env:
   #!/usr/bin/env bash
   set -euo pipefail
-  cd {{KONA_ROOT}}/..
-  export MONOREPO_CONTEXT="$(cd .. && pwd)"
-
-  # Build the kona-build-env stage (before cannon/prestate generation) and load it.
-  # Override platform to single arch and set tags so the image is named correctly.
-  docker buildx bake \
-    --set "kona-cannon-prestate.target=kona-build-env" \
-    --set "kona-cannon-prestate.tags=kona-cannon-env:local" \
-    --set "cannon-builder.platform=linux/amd64" \
-    --load \
-    --allow "fs=$MONOREPO_CONTEXT" \
-    -f kona/docker/docker-bake.hcl \
-    kona-cannon-prestate
+  MONOREPO_ROOT="{{KONA_ROOT}}/../.."
+  docker build \
+    --platform linux/amd64 \
+    --target kona-build-env \
+    -t kona-cannon-env:local \
+    -f "{{KONA_ROOT}}/docker/fpvm-prestates/cannon-repro.dockerfile" \
+    "$MONOREPO_ROOT"
 
 # Lint the workspace (mips arch) inside the reproducible build environment.
 # Uses the same Docker environment as the prestate build to validate against the release toolchain.

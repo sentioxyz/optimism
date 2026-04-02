@@ -3,57 +3,82 @@
 #                                                               #
 #   Build logic lives in rust/justfile.                         #
 #   This Dockerfile provides a fixed environment and calls it.  #
-#   Cannon binary is provided via a named build context.        #
 ################################################################
 
-FROM cannon-builder AS kona-build-env
+################################################################
+#              Build Cannon from local monorepo                #
+################################################################
+
+FROM golang:1.24.13-alpine3.21 AS cannon-build
+
+RUN apk add --no-cache bash just
+
+COPY go.mod go.sum /app/
+COPY cannon/ /app/cannon/
+COPY op-service/ /app/op-service/
+COPY op-preimage/ /app/op-preimage/
+COPY justfiles/ /app/justfiles/
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    cd /app/cannon && just cannon
+
+################################################################
+#    Build kona-client ELF + generate prestate                 #
+################################################################
+
+FROM us-docker.pkg.dev/oplabs-tools-artifacts/images/cannon-builder:v1.0.0 AS kona-build-env
 SHELL ["/bin/bash", "-c"]
 
 ARG VARIANT=kona-client
 
 # --- Layer 1: mise (changes rarely) ---
-# Install mise using the monorepo's pinned version script (same as CI)
-COPY --from=monorepo ops/scripts/install_mise.sh /tmp/install_mise.sh
+COPY ops/scripts/install_mise.sh /tmp/install_mise.sh
 RUN chmod +x /tmp/install_mise.sh && /tmp/install_mise.sh
 ENV PATH="/root/.local/bin:${PATH}"
 
 # Install only the tools needed for this build from mise.toml
-COPY --from=monorepo mise.toml /app/mise.toml
-COPY rust-toolchain.toml /app/rust/rust-toolchain.toml
+COPY mise.toml /app/mise.toml
+COPY rust/rust-toolchain.toml /app/rust/rust-toolchain.toml
 WORKDIR /app
 RUN mise trust && mise install go rust just jq
 
-# Ensure mise-installed tools are on PATH
+# Ensure mise-installed tools are on PATH.
+# MISE_GLOBAL_CONFIG_FILE is set so shims resolve tool versions even when
+# the working directory is changed (e.g. via `docker run -w /workdir`).
 ENV PATH="/root/.local/share/mise/shims:${PATH}"
+ENV MISE_GLOBAL_CONFIG_FILE="/app/mise.toml"
 
 # --- Layer 2: Rust nightly (changes when NIGHTLY pin changes) ---
-COPY justfile /app/rust/justfile
+COPY rust/justfile /app/rust/justfile
 RUN cd /app/rust && just install-nightly
 
 # --- Layer 3: Rust workspace source ---
-COPY Cargo.toml Cargo.lock /app/rust/
-COPY .cargo/ /app/rust/.cargo/
-COPY kona/ /app/rust/kona/
-COPY op-alloy/ /app/rust/op-alloy/
-COPY alloy-op-evm/ /app/rust/alloy-op-evm/
-COPY alloy-op-hardforks/ /app/rust/alloy-op-hardforks/
+COPY rust/Cargo.toml rust/Cargo.lock /app/rust/
+COPY rust/.cargo/ /app/rust/.cargo/
+COPY rust/kona/ /app/rust/kona/
+COPY rust/op-alloy/ /app/rust/op-alloy/
+COPY rust/alloy-op-evm/ /app/rust/alloy-op-evm/
+COPY rust/alloy-op-hardforks/ /app/rust/alloy-op-hardforks/
 # op-reth is a workspace member but not a kona-client dependency.
 # We need its Cargo.toml files so the workspace resolves.
-COPY op-reth/ /app/rust/op-reth/
+COPY rust/op-reth/ /app/rust/op-reth/
 
 # --- Layer 4: Build kona-client ELF ---
+# Override the target spec baked into the cannon-builder image (which has
+# target-c-int-width: 64) with the corrected one from the source tree.
+COPY rust/kona/docker/cannon/mips64-unknown-none.json /mips64-unknown-none.json
 RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/app/rust/target \
     cd /app/rust && just build-kona-client-elf ${VARIANT}
 
 ################################################################
-#   Generate prestate using cannon from named context           #
+#   Generate prestate                                          #
 ################################################################
 
 FROM kona-build-env AS prestate-build
 
-# Copy cannon binary from named context
-COPY --from=cannon /usr/local/bin/cannon /app/cannon
+COPY --from=cannon-build /app/cannon/bin/cannon /app/cannon
 RUN /app/cannon load-elf \
       --path=/app/rust/target/mips64-unknown-none/release-client-lto/${VARIANT} \
       --out=/app/prestate.bin.gz \
