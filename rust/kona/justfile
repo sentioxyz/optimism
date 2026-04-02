@@ -102,6 +102,7 @@ build-kona-env:
   docker buildx bake \
     --set "kona-cannon-prestate.target=builder" \
     --set "kona-cannon-prestate.output=type=docker,name=kona-cannon-env:local" \
+    --allow "fs=$MONOREPO_CONTEXT" \
     -f kona/docker/docker-bake.hcl \
     kona-cannon-prestate
 

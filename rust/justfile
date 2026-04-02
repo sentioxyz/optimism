@@ -16,7 +16,7 @@ default:
 
 # Install the pinned nightly toolchain
 install-nightly:
-  rustup toolchain install {{NIGHTLY}} --component rustfmt rust-src
+  rustup toolchain install {{NIGHTLY}} --component rustfmt --component rust-src
 
 ############################### Build ###############################
 
@@ -290,6 +290,7 @@ build-kona-reproducible-prestate-variant VARIANT OUTPUT_DIR:
 
     docker buildx bake \
       --set "*.output=$OUTPUT" \
+      --allow "fs=$MONOREPO_ROOT" \
       -f kona/docker/docker-bake.hcl \
       kona-cannon-prestate
 
