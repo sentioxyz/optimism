@@ -160,6 +160,10 @@ where
         self.inner.cfg_env()
     }
 
+    fn cfg_env_mut(&mut self) -> &mut revm::context::CfgEnv<Self::Spec> {
+        self.inner.cfg_env_mut()
+    }
+
     fn chain_id(&self) -> u64 {
         self.inner.chain_id()
     }

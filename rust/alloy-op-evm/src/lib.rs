@@ -379,6 +379,10 @@ where
         &self.cfg
     }
 
+    fn cfg_env_mut(&mut self) -> &mut CfgEnv<OpSpecId> {
+        &mut self.cfg
+    }
+
     fn chain_id(&self) -> u64 {
         self.cfg.chain_id
     }
